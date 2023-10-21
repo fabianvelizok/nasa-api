@@ -1,11 +1,12 @@
 const launches = new Map()
+let latestFlightNumber = 100
 
 const launch = {
   mission: 'Kepler exploration',
   rocket: 'Explorer IS1',
   launchDate: new Date('December 27, 2030'),
-  destination: 'Kepler-442 b',
-  flightNumber: 100,
+  target: 'Kepler-442 b',
+  flightNumber: latestFlightNumber++,
   customer: ['ZTM', 'NASA'],
   upcoming: true,
   success: true
@@ -14,8 +15,8 @@ const launch2 = {
   mission: 'Kepler exploration 2',
   rocket: 'Explorer IS2',
   launchDate: new Date('December 29, 2031'),
-  destination: 'Kepler-442 b',
-  flightNumber: 101,
+  target: 'Kepler-442 b',
+  flightNumber: latestFlightNumber++,
   customer: ['ZTM', 'NASA'],
   upcoming: true,
   success: true
@@ -33,8 +34,35 @@ function getAllLaunchesSortedByFlightNumber() {
   return launches.sort((a, b) => a.flightNumber - b.flightNumber)
 }
 
+function isValidDate(parsedDate) {
+  if (!parsedDate) {
+    return false
+  }
+  return !isNaN(parsedDate.valueOf())
+}
+
+function addNewLaunch(launch) {
+  const { mission, rocket, launchDate, target } = launch
+  const currentFlightNumber = latestFlightNumber++
+
+  launches.set(currentFlightNumber, {
+    mission,
+    rocket,
+    launchDate,
+    target,
+    flightNumber: currentFlightNumber,
+    customer: ['ZTM', 'NASA'],
+    upcoming: true,
+    success: true
+  })
+
+  return launches.get(currentFlightNumber)
+}
+
 module.exports = {
   launches,
   getAllLaunches,
-  getAllLaunchesSortedByFlightNumber
+  getAllLaunchesSortedByFlightNumber,
+  addNewLaunch,
+  isValidDate
 }
