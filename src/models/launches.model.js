@@ -24,6 +24,17 @@ const launch2 = {
 launches.set(launch2.flightNumber, launch2)
 launches.set(launch.flightNumber, launch)
 
+function getAllLaunches() {
+  return Array.from(launches.values())
+}
+
+function getAllLaunchesSortedByFlightNumber() {
+  const launches = getAllLaunches()
+  return launches.sort((a, b) => a.flightNumber - b.flightNumber)
+}
+
 module.exports = {
-  launches
+  launches,
+  getAllLaunches,
+  getAllLaunchesSortedByFlightNumber
 }

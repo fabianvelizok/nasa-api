@@ -1,16 +1,14 @@
-const { launches } = require('../../models/launches.model')
+const { getAllLaunches, getAllLaunchesSortedByFlightNumber } = require('../../models/launches.model')
 
-function getAllLaunches(req, res) {
+function httpGetAllLaunches(req, res) {
   const { sortByFlightNumber } = req.query
-  let launchesArray = Array.from(launches.values())
+  const launches = sortByFlightNumber
+    ? getAllLaunchesSortedByFlightNumber()
+    : getAllLaunches();
 
-  if (sortByFlightNumber) {
-    launchesArray = launchesArray.sort((a, b) => a.flightNumber - b.flightNumber)
-  }
-
-  return res.status(200).json(launchesArray)
+  return res.status(200).json(launches)
 }
 
 module.exports = {
-  getAllLaunches
+  httpGetAllLaunches
 }
