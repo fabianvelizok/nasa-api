@@ -1,3 +1,4 @@
+// TODO: Stateless server. Remove state and persist data in a database.
 const launches = new Map()
 let latestFlightNumber = 100
 
