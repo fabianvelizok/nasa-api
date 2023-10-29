@@ -1,5 +1,6 @@
 const http = require('node:http')
 
+require('dotenv').config()
 const { PORT } = require('./constants')
 const app = require('./app.js')
 const { loadPlanets } = require('./models/planets.model')
