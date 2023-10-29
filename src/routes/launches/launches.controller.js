@@ -7,16 +7,16 @@ const {
   abortLaunchByID
 } = require('../../models/launches.model')
 
-function httpGetAllLaunches(req, res) {
+async function httpGetAllLaunches(req, res) {
   const { sortByFlightNumber } = req.query
   const launches = sortByFlightNumber
-    ? getAllLaunchesSortedByFlightNumber()
-    : getAllLaunches();
+    ? await getAllLaunchesSortedByFlightNumber()
+    : await getAllLaunches();
 
   return res.status(200).json(launches)
 }
 
-function httpAddNewLaunch(req, res) {
+async function httpAddNewLaunch(req, res) {
   const { mission, rocket, launchDate, target } = req.body
 
   if (!mission || !rocket || !launchDate || !target) {
@@ -27,18 +27,25 @@ function httpAddNewLaunch(req, res) {
   if (!isValidDate(parsedLaunchDate)) {
     return res.status(400).json({ error: 'Invalid launch date property!' })
   }
-  const newLaunch = addNewLaunch({ ...req.body, launchDate: parsedLaunchDate })
-  return res.status(201).json(newLaunch)
+
+  try {
+    const newLaunch = await addNewLaunch({ ...req.body, launchDate: parsedLaunchDate })
+    return res.status(201).json(newLaunch)
+  } catch (e) {
+    console.log(e)
+    return res.status(400).json({ error: 'Error creating new launch' })
+  }
 }
 
-function httpAbortLaunch(req, res) {
+async function httpAbortLaunch(req, res) {
   const { id } = req.params
   const parsedID = Number(id)
+  const exists = await existsLaunchWithID(parsedID)
 
-  if (!existsLaunchWithID(parsedID)) {
+  if (!exists) {
     res.status(404).json({ error: 'Launch not found!' })
   } else {
-    const aborted = abortLaunchByID(parsedID)
+    const aborted = await abortLaunchByID(parsedID)
     res.status(200).json(aborted)
   }
 }
