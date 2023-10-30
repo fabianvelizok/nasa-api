@@ -1,18 +1,15 @@
 const {
   getAllLaunches,
-  getAllLaunchesSortedByFlightNumber,
   addNewLaunch,
   isValidDate,
   existsLaunchWithID,
   abortLaunchByID
 } = require('../../models/launches.model')
+const { getPagination } = require('../../services/query')
 
 async function httpGetAllLaunches(req, res) {
-  const { sortByFlightNumber } = req.query
-  const launches = sortByFlightNumber
-    ? await getAllLaunchesSortedByFlightNumber()
-    : await getAllLaunches();
-
+  const { limit, skip } = getPagination(req.query)
+  const launches = await getAllLaunches(limit, skip);
   return res.status(200).json(launches)
 }
 

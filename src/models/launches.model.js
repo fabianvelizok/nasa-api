@@ -4,49 +4,57 @@ const Launch = require('./launches.mongo')
 const Planet = require('./planets.mongo')
 const { SPACEX_API_URL } = require('../constants')
 
-const DEFAULT_FLIGHT_NUMBER = 299
+const DEFAULT_FLIGHT_NUMBER = 99
+
+function handleLaunchesError(error) {
+  const errorTitle =  'Error downloading launches'
+  console.error(errorTitle, error)
+}
 
 async function populateLaunches() {
-  const response = await axios({
-    url: `${SPACEX_API_URL}/launches/query`,
-    method: 'post',
-    data: {
-      query: {},
-      options: {
-        pagination: false,
-        populate: [
-          {
-            path: 'rocket',
-            select: { name: 1 }
-          },
-          {
-            path: 'payloads',
-            select: { customers: 1 }
-          }
-        ]
+  try {
+    const response = await axios({
+      url: `${SPACEX_API_URL}/launches/query`,
+      method: 'post',
+      data: {
+        query: {},
+        options: {
+          pagination: false,
+          populate: [
+            {
+              path: 'rocket',
+              select: { name: 1 }
+            },
+            {
+              path: 'payloads',
+              select: { customers: 1 }
+            }
+          ]
+        }
       }
-    }
-  })
+    })
 
-  if (response.status !== 200) {
-    const error = 'Error downloading launches'
-    console.log(error)
-    throw new Error(error)
-  }
-
-  for (const launchDoc of response.data.docs) {
-    const launch = {
-      mission: launchDoc.name,
-      rocket: launchDoc.rocket.name,
-      launchDate: launchDoc.date_local,
-      target: '', // No matching prop
-      flightNumber: launchDoc.flight_number,
-      customers: launchDoc.payloads.flatMap(p => p.customers),
-      upcoming: launchDoc.upcoming,
-      success: launchDoc.success
+    if (response.status !== 200) {
+      handleLaunchesError()
     }
 
-    await saveLaunch(launch)
+    for (const launchDoc of response.data.docs) {
+      const launch = {
+        mission: launchDoc.name,
+        rocket: launchDoc.rocket.name,
+        launchDate: launchDoc.date_local,
+        target: '', // No matching prop
+        flightNumber: launchDoc.flight_number,
+        customers: launchDoc.payloads.flatMap(p => p.customers),
+        upcoming: launchDoc.upcoming,
+        success: launchDoc.success
+      }
+      console.log(`Saving launch with flightNumber: ${launch.flightNumber} and mission: ${launch.mission}`)
+
+      await saveLaunch(launch)
+    }
+  } catch (e) {
+    handleLaunchesError(e)
   }
 }
 
@@ -62,14 +70,12 @@ async function findLaunch(filter) {
   return await Launch.findOne(filter)
 }
 
-async function getAllLaunches() {
-  return await Launch.find({}, { __v: 0, _id: 0 })
-}
-
-async function getAllLaunchesSortedByFlightNumber() {
+async function getAllLaunches(limit, skip) {
   return await Launch
     .find({}, { __v: 0, _id: 0 })
     .sort('flightNumber')
+    .skip(skip)
+    .limit(limit)
 }
 
 async function getLatestFlightNumber() {
@@ -140,7 +146,6 @@ async function abortLaunchByID(flightNumber) {
 
 module.exports = {
   getAllLaunches,
-  getAllLaunchesSortedByFlightNumber,
   addNewLaunch,
   isValidDate,
   existsLaunchWithID,
