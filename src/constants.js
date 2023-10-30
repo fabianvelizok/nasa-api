@@ -1,6 +1,7 @@
 const process = require('node:process')
 
 const CLIENT_URL = 'http://localhost:3000'
+const SPACEX_API_URL = 'https://api.spacexdata.com/v4'
 
 const PORT = process.env.PORT || 8000
 
@@ -14,5 +15,6 @@ if (!process.env.DB_USER || !process.env.DB_PASSWORD || !process.env.DB_URL) {
 module.exports = {
   CLIENT_URL,
   PORT,
-  DB_URL
+  DB_URL,
+  SPACEX_API_URL
 }

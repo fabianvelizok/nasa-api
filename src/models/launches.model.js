@@ -1,7 +1,66 @@
+const axios = require('axios')
+
 const Launch = require('./launches.mongo')
 const Planet = require('./planets.mongo')
+const { SPACEX_API_URL } = require('../constants')
 
-const DEFAULT_FLIGHT_NUMBER = 99
+const DEFAULT_FLIGHT_NUMBER = 299
+
+async function populateLaunches() {
+  const response = await axios({
+    url: `${SPACEX_API_URL}/launches/query`,
+    method: 'post',
+    data: {
+      query: {},
+      options: {
+        pagination: false,
+        populate: [
+          {
+            path: 'rocket',
+            select: { name: 1 }
+          },
+          {
+            path: 'payloads',
+            select: { customers: 1 }
+          }
+        ]
+      }
+    }
+  })
+
+  if (response.status !== 200) {
+    const error = 'Error downloading launches'
+    console.log(error)
+    throw new Error(error)
+  }
+
+  for (const launchDoc of response.data.docs) {
+    const launch = {
+      mission: launchDoc.name,
+      rocket: launchDoc.rocket.name,
+      launchDate: launchDoc.date_local,
+      target: '', // No matching prop
+      flightNumber: launchDoc.flight_number,
+      customers: launchDoc.payloads.flatMap(p => p.customers),
+      upcoming: launchDoc.upcoming,
+      success: launchDoc.success
+    }
+
+    await saveLaunch(launch)
+  }
+}
+
+async function loadLaunches() {
+  const firstLaunch = await findLaunch({ flightNumber: 1 })
+  if (firstLaunch) {
+    return console.log('Launches already saved')
+  }
+  return await populateLaunches()
+}
+
+async function findLaunch(filter) {
+  return await Launch.findOne(filter)
+}
 
 async function getAllLaunches() {
   return await Launch.find({}, { __v: 0, _id: 0 })
@@ -29,12 +88,6 @@ function isValidDate(parsedDate) {
 }
 
 async function saveLaunch(launch) {
-  const planet = await Planet.findOne({ keplerName: launch.target })
-
-  if (!planet) {
-    throw new Error('No matching planet found') 
-  }
-
   const newLaunch = await Launch.findOneAndUpdate({
     flightNumber: launch.flightNumber
   }, launch, {
@@ -48,6 +101,11 @@ async function saveLaunch(launch) {
 
 async function addNewLaunch(launch) {
   const { mission, rocket, launchDate, target } = launch
+  const planet = await Planet.findOne({ keplerName: target })
+
+  if (!planet) {
+    throw new Error('No matching planet found')
+  }
   const flightNumber = await getLatestFlightNumber() + 1
 
   return await saveLaunch({
@@ -86,5 +144,6 @@ module.exports = {
   addNewLaunch,
   isValidDate,
   existsLaunchWithID,
-  abortLaunchByID
+  abortLaunchByID,
+  loadLaunches
 }
