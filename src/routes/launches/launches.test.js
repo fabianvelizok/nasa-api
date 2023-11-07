@@ -11,16 +11,16 @@ describe('launches API', () => {
     await mongoDisconnect()
   })
 
-  describe('Test GET /launches', () => {
+  describe('Test GET /v1/launches', () => {
     it('Should respond with a 200 status code', async () => {
       await request(app)
-        .get('/launches')
+        .get('/v1/launches')
         .expect('Content-Type', /json/)
         .expect(200)
     })
   })
 
-  describe('Test POST /launches', () => {
+  describe('Test POST /v1/launches', () => {
     const body = {
       mission: "ZTM",
       rocket: "ZTM Rocket",
@@ -30,7 +30,7 @@ describe('launches API', () => {
 
     it('Should respond with a 201 status code', async () => {
       const response = await request(app)
-        .post('/launches')
+        .post('/v1/launches')
         .send(body)
         .expect('Content-Type', /json/)
         .expect(201)
@@ -43,7 +43,7 @@ describe('launches API', () => {
 
     it('Should catch missing required props', async () => {
       const response = await request(app)
-        .post('/launches')
+        .post('/v1/launches')
         .send({
           mission: "ZTM",
         })
@@ -57,7 +57,7 @@ describe('launches API', () => {
 
     it('Should catch an invalid date', async () => {
       const response = await request(app)
-        .post('/launches')
+        .post('/v1/launches')
         .send({
           ...body,
           launchDate: "Hello"
