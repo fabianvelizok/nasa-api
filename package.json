@@ -6,9 +6,9 @@
   "scripts": {
     "test": "jest",
     "test:watch": "jest --watch",
-    "dev": "PORT=4000 nodemon src/server.js",
-    "start": "PORT=4000 node src/server.js",
-    "cluster": "PORT=4000 pm2 start src/server.js -i max"
+    "dev": "nodemon src/server.js",
+    "start": "node src/server.js",
+    "cluster": "pm2 start src/server.js -i max"
   },
   "keywords": [],
   "author": "",
